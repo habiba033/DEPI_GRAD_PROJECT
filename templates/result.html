@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Result</h2>
+
+<p><strong>Stage:</strong> {{ decision.stage }}</p>
+{% if decision.life_pred is not none %}
+  <p>Lifestyle prediction: {{ decision.life_pred }} (p = {{ "%.3f"|format(decision.life_proba or 0) }})</p>
+{% endif %}
+{% if decision.clin_pred is not none %}
+  <p>Clinical prediction: {{ decision.clin_pred }} (p = {{ "%.3f"|format(decision.clin_proba or 0) }})</p>
+{% endif %}
+
+<p><strong>Interpretation:</strong> {{ decision.interpretation }}</p>
+<p><strong>Recommendation:</strong> {{ decision.recommendation }}</p>
+
+<a href="{{ url_for('index') }}">Back to Home</a>
+{% endblock %}

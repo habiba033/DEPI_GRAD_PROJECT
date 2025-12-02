@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="p-4 md:p-8 max-w-4xl mx-auto animate-fadeIn pb-20">
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="bg-rose-600 p-6 text-white">
+      <h2 class="text-2xl font-bold flex items-center gap-2">
+        <span class="inline-flex h-8 w-8 rounded-full bg-white/20 justify-center items-center">👤</span>
+        Stage 1: Lifestyle Assessment
+      </h2>
+      <p class="opacity-90">Please provide your general health and habit details.</p>
+    </div>
+
+    <form method="post">
+  <div class="p-8 grid md:grid-cols-2 gap-6">
+
+    <!-- Age Category -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Age Category</label>
+      <select name="ageCategory" class="w-full p-2 border rounded-md">
+        {% for c in age_cats %}
+          <option value="{{ c }}" {% if form_data and form_data.ageCategory == c %}selected{% endif %}>
+            {{ c }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Sex -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Sex</label>
+      <select name="sex" class="w-full p-2 border rounded-md">
+        <option value="Male" {% if form_data and form_data.sex == "Male" %}selected{% endif %}>Male</option>
+        <option value="Female" {% if form_data and form_data.sex == "Female" %}selected{% endif %}>Female</option>
+      </select>
+    </div>
+
+    <!-- Height -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Height (cm)</label>
+      <input type="number" step="0.1" name="height" id="height"
+            value="{{ form_data.height if form_data else '' }}"
+            class="w-full p-2 border rounded-md">
+    </div>
+
+    <!-- Weight -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Weight (kg)</label>
+      <input type="number" step="0.1" name="weight" id="weight"
+            value="{{ form_data.weight if form_data else '' }}"
+            class="w-full p-2 border rounded-md">
+    </div>
+
+    <!-- BMI (auto + slider) -->
+    {% set bmi_val = form_data.bmi if form_data and form_data.bmi else 30 %}
+      <div class="md:col-span-2">
+      <label class="block text-sm font-medium text-slate-700 mb-1">
+      BMI <span class="text-xs text-slate-500">(auto-calculated from height &amp; weight, but you can adjust)</span>
+      </label>
+      <input type="range" name="bmi" id="bmi" min="15" max="45" step="0.1"
+          value="{{ bmi_val }}" class="w-full">
+      <div class="text-sm text-slate-600 mt-1">
+      BMI: <span id="bmi_value"></span>
+    </div>
+  </div>
+
+
+    <!-- General Health -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">General Health</label>
+      <select name="generalHealth" class="w-full p-2 border rounded-md">
+        {% for gh in ["Excellent","Very Good","Good","Fair","Poor"] %}
+          <option value="{{ gh }}" {% if form_data and form_data.generalHealth == gh %}selected{% endif %}>
+            {{ gh }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Exercise -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Do you Exercise?</label>
+      <select name="exercise" class="w-full p-2 border rounded-md">
+        <option value="Yes" {% if form_data and form_data.exercise == "Yes" %}selected{% endif %}>Yes</option>
+        <option value="No"  {% if form_data and form_data.exercise == "No"  %}selected{% endif %}>No</option>
+      </select>
+    </div>
+
+    <!-- Smoking -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Smoking History?</label>
+      <select name="smoking" class="w-full p-2 border rounded-md">
+        <option value="Yes" {% if form_data and form_data.smoking == "Yes" %}selected{% endif %}>Yes</option>
+        <option value="No"  {% if form_data and form_data.smoking == "No"  %}selected{% endif %}>No</option>
+      </select>
+    </div>
+
+    <!-- Alcohol -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Alcohol Consumption (drinks/week)</label>
+      <input type="range" name="alcohol" min="0" max="21" step="1" id="alcohol"
+            value="{{ form_data.alcohol if form_data and form_data.alcohol else 0 }}"
+            class="w-full">
+      <div class="text-xs text-slate-500 mt-1">
+        Value: <span id="alcohol_value"></span>
+      </div>
+    </div>
+
+    <!-- Fruit -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Fruit Consumption (servings/day)</label>
+      <input type="range" name="fruit" min="0" max="10" step="1" id="fruit"
+            value="{{ form_data.fruit if form_data and form_data.fruit else 3 }}"
+            class="w-full">
+      <div class="text-xs text-slate-500 mt-1">
+        Value: <span id="fruit_value"></span>
+      </div>
+    </div>
+
+    <!-- Vegetables -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">
+        Green Vegetables (servings/day)
+      </label>
+      <input type="range" name="veg" min="0" max="10" step="1" id="veggie"
+          value="{{ form_data.veg if form_data and form_data.veg else 3 }}"
+          class="w-full">
+        <div class="text-xs text-slate-500 mt-1">
+        Value: <span id="veggie_value"></span>
+      </div>
+    </div>
+
+
+    <!-- Fried Potatoes -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Fried Potato (times/week)</label>
+      <input type="range" name="fried" min="0" max="14" step="1" id="fried"
+            value="{{ form_data.fried if form_data and form_data.fried else 2 }}"
+            class="w-full">
+      <div class="text-xs text-slate-500 mt-1">
+        Value: <span id="fried_value"></span>
+      </div>
+    </div>
+
+    <!-- Diabetes -->
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">History of Diabetes?</label>
+      <select name="diabetes" class="w-full p-2 border rounded-md">
+        <option value="No"         {% if form_data and form_data.diabetes == "No" %}selected{% endif %}>No</option>
+        <option value="Yes"        {% if form_data and form_data.diabetes == "Yes" %}selected{% endif %}>Yes</option>
+        <option value="Borderline" {% if form_data and form_data.diabetes == "Borderline" %}selected{% endif %}>Borderline</option>
+      </select>
+    </div>
+
+  </div>
+
+
+      <div class="p-6 bg-slate-50 border-t flex flex-col items-center">
+    {% if not decision %}
+      <button type="submit"
+              class="w-full md:w-1/2 bg-slate-800 text-white py-3 rounded-lg font-bold hover:bg-slate-900 transition-colors">
+        Analyze Lifestyle Profile
+      </button>
+    {% else %}
+      {% if decision.level == "Low" %}
+        {% set box_bg = "bg-green-50" %}
+        {% set box_border = "border-green-200" %}
+        {% set title_color = "text-green-800" %}
+      {% else %}
+        {% set box_bg = "bg-red-50" %}
+        {% set box_border = "border-red-200" %}
+        {% set title_color = "text-red-800" %}
+      {% endif %}
+
+      <div class="w-full text-center">
+        <div class="{{ box_bg }} border {{ box_border }} p-4 rounded-lg text-left">
+          <h3 class="text-lg font-bold {{ title_color }} mb-2">
+            <span class="text-xs text-slate-500 block mb-1">
+              DEBUG: level={{ decision.level }}, proba={{ '%.3f'|format(decision.proba) }}
+            </span>
+            {% if decision.level == "Low" %}
+              Result: Low Risk
+            {% else %}
+              ⚠ Warning: {{ decision.level }} Risk
+            {% endif %}
+          </h3>
+          <p class="text-slate-700 mb-4">{{ decision.message }}</p>
+
+          <div class="bg-white p-4 rounded border border-slate-200">
+            <p class="font-semibold text-slate-900 mb-2">Recommendations:</p>
+            <ul class="list-disc list-inside text-slate-600 space-y-1">
+              {% for tip in decision.tips %}
+                <li>{{ tip }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          <a href="{{ url_for('lifestyle_form') }}"
+             class="mt-4 mr-4 text-slate-500 underline text-sm inline-block">
+            Reset
+          </a>
+
+          <a href="{{ url_for('clinical_form',
+                              age_cat=decision.age_cat,
+                              life_pred=decision.pred if decision.pred is defined else 1,
+                              life_proba=decision.proba if decision.proba is defined else 0.5) }}"
+             class="mt-4 text-blue-600 hover:text-blue-800 text-sm font-semibold inline-block">
+            Re-check with clinical assessment (Stage 2)
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  </form>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  console.log("LIFESTYLE SCRIPT LOADED");
+
+  function bindSliderValue(sliderId, valueId) {
+    const s = document.getElementById(sliderId);
+    const v = document.getElementById(valueId);
+    console.log("bind", sliderId, "-> slider:", !!s, "value:", !!v);
+    if (s && v) {
+      v.textContent = s.value;
+      s.addEventListener('input', () => {
+        v.textContent = s.value;
+      });
+    }
+  }
+
+  bindSliderValue('bmi',     'bmi_value');
+  bindSliderValue('fruit',   'fruit_value');
+  bindSliderValue('veggie',  'veggie_value');
+  bindSliderValue('fried',   'fried_value');
+  bindSliderValue('alcohol', 'alcohol_value');
+
+  // BMI auto from height/weight
+  const h = document.getElementById('height');
+  const w = document.getElementById('weight');
+  const bmiSlider = document.getElementById('bmi');
+  const bmiValue  = document.getElementById('bmi_value');
+
+  function updateBMI() {
+    const hv = parseFloat(h.value);
+    const wv = parseFloat(w.value);
+    console.log("DEBUG BMI hv,wv:", hv, wv);
+    if (!isNaN(hv) && hv > 0 && !isNaN(wv) && wv > 0) {
+      const m = hv / 100.0;
+      const bmi = wv / (m * m);
+      const clamped = Math.min(45, Math.max(15, bmi));
+      bmiSlider.value = clamped.toFixed(1);
+      bmiValue.textContent = clamped.toFixed(1);
+    } else {
+      bmiValue.textContent = bmiSlider.value;
+    }
+  }
+
+  if (h && w && bmiSlider && bmiValue) {
+    h.addEventListener('input', updateBMI);
+    w.addEventListener('input', updateBMI);
+    bmiSlider.addEventListener('input', () => {
+      bmiValue.textContent = bmiSlider.value;
+    });
+    bmiValue.textContent = bmiSlider.value;
+  }
+</script>
+{% endblock %}

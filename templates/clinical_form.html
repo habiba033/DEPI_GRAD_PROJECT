@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="p-4 md:p-8 max-w-4xl mx-auto animate-fadeIn pb-20">
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-blue-100">
+    <div class="bg-blue-600 p-6 text-white">
+      <h2 class="text-2xl font-bold flex items-center gap-2">
+        <span class="inline-flex h-8 w-8 rounded-full bg-white/20 justify-center items-center">🩺</span>
+        Stage 2: Clinical Assessment
+      </h2>
+      <p class="opacity-90">Please enter your recent clinical measurements.</p>
+    </div>
+
+    <form method="post">
+      <div class="p-8 grid md:grid-cols-2 gap-6">
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Age (years)</label>
+          <input type="number" name="age"
+            value="{% if form_data %}{{ form_data.age }}{% elif default_age %}{{ default_age }}{% endif %}"
+            class="w-full p-2 border rounded-md" required>
+        </div>
+
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Resting Blood Pressure (mm Hg)</label>
+          <input type="number" name="restingBP"
+            value="{% if form_data %}{{ form_data.restingBP }}{% else %}120{% endif %}"
+            class="w-full p-2 border rounded-md" required>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Serum Cholesterol (mg/dl)</label>
+          <input type="number" name="cholesterol"
+            value="{% if form_data %}{{ form_data.cholesterol }}{% else %}190{% endif %}"
+            class="w-full p-2 border rounded-md" required>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Max Heart Rate (bpm)</label>
+          <input type="number" name="maxHR"
+            value="{% if form_data %}{{ form_data.maxHR }}{% else %}150{% endif %}"
+            class="w-full p-2 border rounded-md" required>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">ST Depression (oldpeak)</label>
+          <input type="number" step="0.1" name="oldpeak"
+            value="{% if form_data %}{{ form_data.oldpeak }}{% else %}0.0{% endif %}"
+            class="w-full p-2 border rounded-md" required>
+      </div>
+
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Chest Pain Type</label>
+          <select name="chestPain" class="w-full p-2 border rounded-md">
+            <option>Typical Angina</option>
+            <option>Atypical Angina</option>
+            <option>Non-anginal Pain</option>
+            <option>Asymptomatic</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Thalassemia</label>
+          <select name="thal" class="w-full p-2 border rounded-md">
+            <option>Normal</option>
+            <option>Fixed Defect</option>
+            <option>Reversable Defect</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Resting ECG</label>
+          <select name="restingECG" class="w-full p-2 border rounded-md">
+            <option>Normal</option>
+            <option>ST-T Wave Abnormality</option>
+            <option>Left Ventricular Hypertrophy</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">ST Slope</label>
+          <select name="slope" class="w-full p-2 border rounded-md">
+            <option>Up</option>
+            <option>Flat</option>
+            <option>Down</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Fasting Blood Sugar (&gt;120 mg/dl)</label>
+          <select name="fbs" class="w-full p-2 border rounded-md">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Exercise-induced Angina</label>
+          <select name="exAngina" class="w-full p-2 border rounded-md">
+            <option>No</option>
+            <option>Yes</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Major Vessels (0–3) by Fluoroscopy</label>
+          <input type="number" min="0" max="3" name="vessels"
+            value="{% if form_data %}{{ form_data.vessels }}{% else %}0{% endif %}"
+            class="w-full p-2 border rounded-md">
+        </div>
+
+      </div>
+
+      <div class="p-6 bg-slate-50 border-t flex flex-col items-center">
+        {% if not decision %}
+          <button type="submit"
+                  class="w-full md:w-1/2 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors">
+            Run Clinical Prediction
+          </button>
+        {% else %}
+          {% if decision.level == "Low" %}
+            {% set box_bg = "bg-green-50" %}
+            {% set box_border = "border-green-200" %}
+            {% set title_color = "text-green-800" %}
+          {% else %}
+            {% set box_bg = "bg-red-50" %}
+            {% set box_border = "border-red-200" %}
+            {% set title_color = "text-red-800" %}
+          {% endif %}
+
+          <div class="w-full text-center">
+            <div class="{{ box_bg }} border {{ box_border }} p-4 rounded-lg text-left">
+              <h3 class="text-lg font-bold {{ title_color }} mb-2">
+                {% if decision.level == "Low" %}
+                  Clinical Result: Low Risk
+                {% else %}
+                  ⚠ Clinical Warning: {{ decision.level }} Risk
+                {% endif %}
+              </h3>
+              <p class="text-slate-700 mb-4">
+                Model probability: {{ '%.3f'|format(decision.proba) }} • {{ decision.message }}
+              </p>
+
+              <div class="bg-white p-4 rounded border border-slate-200">
+                <p class="font-semibold text-slate-900 mb-2">Clinical recommendations:</p>
+                <ul class="list-disc list-inside text-slate-600 space-y-1">
+                  {% for tip in decision.tips %}
+                    <li>{{ tip }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+
+              <a href="{{ url_for('clinical_form') }}"
+                 class="mt-4 mr-4 text-slate-500 underline text-sm inline-block">
+                Reset
+              </a>
+              <a href="{{ url_for('lifestyle_form') }}"
+                 class="mt-4 text-slate-500 underline text-sm inline-block">
+                Back to Lifestyle model
+              </a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

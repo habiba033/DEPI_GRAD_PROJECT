@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="p-4 md:p-8 max-w-5xl mx-auto animate-fadeIn pb-20">
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="bg-emerald-600 p-6 text-white">
+      <h2 class="text-2xl font-bold">Lifestyle & Risk Insights</h2>
+      <p class="opacity-90 text-sm">
+        Exploratory data analysis on the lifestyle dataset showing how habits relate to heart disease risk.
+      </p>
+    </div>
+
+    <div class="p-6 space-y-8 bg-slate-50">
+
+      <section>
+        <h3 class="text-lg font-semibold text-slate-800 mb-2">
+          Heart Disease Status Distribution
+        </h3>
+        <p class="text-sm text-slate-600 mb-3">
+          Overall proportion of patients with and without heart disease in the lifestyle dataset.
+        </p>
+        <img src="{{ url_for('static', filename='visuals/heart_disease_pie.png') }}"
+             alt="Heart Disease Pie Chart"
+             class="w-full rounded-lg border border-slate-200 shadow-sm">
+      </section>
+
+      <section>
+        <h3 class="text-lg font-semibold text-slate-800 mb-2">
+          Cases per Age Group
+        </h3>
+        <p class="text-sm text-slate-600 mb-3">
+          Number of heart disease cases in each age category, highlighting how risk grows with age.
+        </p>
+        <img src="{{ url_for('static', filename='visuals/age_hd_bar.png') }}"
+             alt="Age vs Heart Disease"
+             class="w-full rounded-lg border border-slate-200 shadow-sm">
+      </section>
+
+      <section>
+        <h3 class="text-lg font-semibold text-slate-800 mb-2">
+          BMI, Alcohol & Fruit Intake
+        </h3>
+        <p class="text-sm text-slate-600 mb-3">
+          3D view of BMI, alcohol consumption, and fruit intake colored by heart disease status.
+        </p>
+        <img src="{{ url_for('static', filename='visuals/bmi_alcohol_fruit_3d.png') }}"
+             alt="3D Lifestyle Scatter"
+             class="w-full rounded-lg border border-slate-200 shadow-sm">
+      </section>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

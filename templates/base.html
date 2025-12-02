@@ -1,0 +1,30 @@
+<!-- templates/base.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>MediPredict AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans">
+  <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <a href="{{ url_for('index') }}" class="flex items-center cursor-pointer">
+          <span class="h-8 w-8 rounded-full bg-rose-600 mr-2"></span>
+          <span class="font-bold text-xl text-slate-800">MediPredict</span>
+        </a>
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="{{ url_for('visuals_lifestyle') }}" class="text-sm font-medium text-slate-500 hover:text-rose-600">Visuals</a>
+          <a href="{{ url_for('lifestyle_form') }}" class="text-sm font-medium text-slate-500 hover:text-rose-600">Prediction Models</a>
+        </div> 
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
