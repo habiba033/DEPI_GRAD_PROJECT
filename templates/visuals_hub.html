@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <!-- Visuals Hub Content -->
+  <div class="p-8 max-w-6xl mx-auto animate-fadeIn min-h-[80vh] flex flex-col justify-center">
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold text-slate-800 mb-4">
+        Visual Insights Hub
+      </h2>
+      <p class="text-xl text-slate-600">
+        Choose which visual dashboard you want to explore.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full">
+      <!-- Card 1: Cardiovascular Insights -->
+      <a href="{{ url_for('visuals_cardio') }}"
+         class="group bg-white p-8 rounded-2xl shadow-xl border-2 border-transparent
+                hover:border-rose-500 cursor-pointer transition-all duration-300
+                hover:-translate-y-2 hover:shadow-2xl block">
+        <div class="bg-rose-100 w-16 h-16 rounded-full flex items-center justify-center mb-6
+                    group-hover:bg-rose-500 transition-all duration-300 mx-auto">
+          <span class="text-rose-600 group-hover:text-white text-2xl transition-all duration-300">
+            ❤️
+          </span>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800 mb-3 text-center
+                   group-hover:text-rose-600 transition-colors">
+          Cardiovascular Insights
+        </h3>
+        <p class="text-slate-600 mb-6 text-center leading-relaxed">
+          Visualize BRFSS lifestyle patterns, risk factors, and population‑level heart disease trends.
+        </p>
+        <div class="text-rose-600 font-semibold flex items-center justify-center gap-2 text-lg
+                    group-hover:text-rose-500 transition-colors">
+          Open Dashboard
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Card 2: Clinical Insights -->
+      <a href="{{ url_for('visuals_clinical') }}"
+         class="group bg-white p-8 rounded-2xl shadow-xl border-2 border-transparent
+                hover:border-blue-500 cursor-pointer transition-all duration-300
+                hover:-translate-y-2 hover:shadow-2xl block">
+        <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-6
+                    group-hover:bg-blue-500 transition-all duration-300 mx-auto">
+          <span class="text-blue-600 group-hover:text-white text-2xl transition-all duration-300">
+            🧬
+          </span>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800 mb-3 text-center
+                   group-hover:text-blue-600 transition-colors">
+          Clinical Insights
+        </h3>
+        <p class="text-slate-600 mb-6 text-center leading-relaxed">
+          Explore lab values, ECG features, and clinical markers driving heart disease outcomes.
+        </p>
+        <div class="text-blue-600 font-semibold flex items-center justify-center gap-2 text-lg
+                    group-hover:text-blue-500 transition-colors">
+          Open Dashboard
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Bottom CTA -->
+    <div class="mt-16 text-center">
+      <p class="text-lg text-slate-600 mb-6 max-w-2xl mx-auto">
+        Use these dashboards to understand population‑level patterns before or after running individual predictions.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <a href="{{ url_for('lifestyle_form') }}"
+           class="bg-rose-600 hover:bg-rose-700 text-white px-8 py-3 rounded-full
+                  text-lg font-semibold flex items-center gap-2 transition-all duration-300
+                  hover:scale-105 shadow-lg">
+          Start Assessment 🩺
+        </a>
+        <a href="{{ url_for('dashboard') }}"
+           class="bg-slate-800 hover:bg-slate-900 text-white px-8 py-3 rounded-full
+                  text-lg font-semibold flex items-center gap-2 transition-all duration-300
+                  hover:scale-105 shadow-lg">
+          Back to Main Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

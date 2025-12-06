@@ -1,55 +1,122 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="p-4 md:p-8 max-w-5xl mx-auto animate-fadeIn pb-20">
-  <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-    <div class="bg-emerald-600 p-6 text-white">
-      <h2 class="text-2xl font-bold">Lifestyle & Risk Insights</h2>
-      <p class="opacity-90 text-sm">
-        Exploratory data analysis on the lifestyle dataset showing how habits relate to heart disease risk.
-      </p>
+<!-- ✅ Load Plotly FIRST -->
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<div class="p-8 max-w-7xl mx-auto bg-gradient-to-br from-slate-50 to-rose-50 min-h-screen">
+  
+  <!-- Header -->
+  <div class="text-center mb-16">
+    <h1 class="text-5xl font-black bg-gradient-to-r from-rose-600 via-pink-600 to-emerald-600 bg-clip-text text-transparent mb-6">
+      📊 Interactive Analytics Dashboard
+    </h1>
+    <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+      Explore patterns from 100K+ cardiovascular patient records
+    </p>
+  </div>
+
+  <!-- Charts Grid - RESPONSIVE -->
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12">
+    
+    <!-- 1. Heart Disease Pie -->
+    <div class="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 hover:shadow-3xl transition-all duration-300 group">
+      <h3 class="font-black text-2xl text-slate-900 mb-6 text-center group-hover:text-rose-600 transition-colors">❤️ Heart Disease</h3>
+      <div id="heart-disease-plot" class="w-full h-[400px]"></div>
     </div>
 
-    <div class="p-6 space-y-8 bg-slate-50">
-
-      <section>
-        <h3 class="text-lg font-semibold text-slate-800 mb-2">
-          Heart Disease Status Distribution
-        </h3>
-        <p class="text-sm text-slate-600 mb-3">
-          Overall proportion of patients with and without heart disease in the lifestyle dataset.
-        </p>
-        <img src="{{ url_for('static', filename='visuals/heart_disease_pie.png') }}"
-             alt="Heart Disease Pie Chart"
-             class="w-full rounded-lg border border-slate-200 shadow-sm">
-      </section>
-
-      <section>
-        <h3 class="text-lg font-semibold text-slate-800 mb-2">
-          Cases per Age Group
-        </h3>
-        <p class="text-sm text-slate-600 mb-3">
-          Number of heart disease cases in each age category, highlighting how risk grows with age.
-        </p>
-        <img src="{{ url_for('static', filename='visuals/age_hd_bar.png') }}"
-             alt="Age vs Heart Disease"
-             class="w-full rounded-lg border border-slate-200 shadow-sm">
-      </section>
-
-      <section>
-        <h3 class="text-lg font-semibold text-slate-800 mb-2">
-          BMI, Alcohol & Fruit Intake
-        </h3>
-        <p class="text-sm text-slate-600 mb-3">
-          3D view of BMI, alcohol consumption, and fruit intake colored by heart disease status.
-        </p>
-        <img src="{{ url_for('static', filename='visuals/bmi_alcohol_fruit_3d.png') }}"
-             alt="3D Lifestyle Scatter"
-             class="w-full rounded-lg border border-slate-200 shadow-sm">
-      </section>
-
+    <!-- 2. General Health -->
+    <div class="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 hover:shadow-3xl transition-all duration-300 group">
+      <h3 class="font-black text-2xl text-slate-900 mb-6 text-center group-hover:text-emerald-600 transition-colors">🏥 Health Status</h3>
+      <div id="general-health-plot" class="w-full h-[400px]"></div>
     </div>
+
+    <!-- 3. Age Risk -->
+    <div class="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 hover:shadow-3xl transition-all duration-300 group">
+      <h3 class="font-black text-2xl text-slate-900 mb-6 text-center group-hover:text-blue-600 transition-colors">📈 Age Risk</h3>
+      <div id="age-hd-plot" class="w-full h-[400px]"></div>
+    </div>
+
+    <!-- 4. Diabetes -->
+    <div class="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 hover:shadow-3xl transition-all duration-300 group">
+      <h3 class="font-black text-2xl text-slate-900 mb-6 text-center group-hover:text-orange-600 transition-colors">💉 Diabetes</h3>
+      <div id="diabetes-plot" class="w-full h-[400px]"></div>
+    </div>
+
+    <!-- 5. Sex Distribution -->
+    <div class="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 hover:shadow-3xl transition-all duration-300 group">
+      <h3 class="font-black text-2xl text-slate-900 mb-6 text-center group-hover:text-purple-600 transition-colors">⚥ Demographics</h3>
+      <div id="sex-plot" class="w-full h-[400px]"></div>
+    </div>
+
+    <!-- 6. BMI Exercise -->
+    <div class="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50 hover:shadow-3xl transition-all duration-300 group">
+      <h3 class="font-black text-2xl text-slate-900 mb-6 text-center group-hover:text-indigo-600 transition-colors">🏃 BMI & Exercise</h3>
+      <div id="bmi-exercise-plot" class="w-full h-[400px]"></div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="flex flex-col sm:flex-row gap-6 justify-center pt-16">
+    <a href="{{ url_for('visuals') }}" 
+       class="bg-gradient-to-r from-rose-600 to-pink-600 text-white px-12 py-4 rounded-2xl font-black text-xl shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300 text-center">
+      🩺 Start Assessment Now
+    </a>
+    <a href="{{ url_for('dashboard') }}" 
+       class="bg-gradient-to-r from-slate-700 to-slate-900 text-white px-12 py-4 rounded-2xl font-black text-xl shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300 text-center">
+      ← Dashboard Home
+    </a>
   </div>
 </div>
 
+<!-- In visuals_lifestyle.html, replace the script section with: -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Rendering plots...');
+    
+    // Heart Disease
+    {% if heart_disease %}
+    const heartData = JSON.parse('{{ heart_disease | safe }}');
+    Plotly.newPlot('heart-disease-plot', heartData.data, heartData.layout);
+    console.log('✅ Heart Disease loaded');
+    {% endif %}
+
+    // General Health
+    {% if general_health %}
+    const healthData = JSON.parse('{{ general_health | safe }}');
+    Plotly.newPlot('general-health-plot', healthData.data, healthData.layout);
+    console.log('✅ General Health loaded');
+    {% endif %}
+
+    // Age HD
+    {% if age_hd %}
+    const ageData = JSON.parse('{{ age_hd | safe }}');
+    Plotly.newPlot('age-hd-plot', ageData.data, ageData.layout);
+    console.log('✅ Age HD loaded');
+    {% endif %}
+
+    // Diabetes
+    {% if diabetes %}
+    const diabetesData = JSON.parse('{{ diabetes | safe }}');
+    Plotly.newPlot('diabetes-plot', diabetesData.data, diabetesData.layout);
+    console.log('✅ Diabetes loaded');
+    {% endif %}
+
+    // Sex
+    {% if sex_distribution %}
+    const sexData = JSON.parse('{{ sex_distribution | safe }}');
+    Plotly.newPlot('sex-plot', sexData.data, sexData.layout);
+    console.log('✅ Sex loaded');
+    {% endif %}
+
+    // BMI Exercise
+    {% if bmi_exercise %}
+    const bmiData = JSON.parse('{{ bmi_exercise | safe }}');
+    Plotly.newPlot('bmi-exercise-plot', bmiData.data, bmiData.layout);
+    console.log('✅ BMI Exercise loaded');
+    {% endif %}
+
+    console.log('🎉 All 6 plots rendered successfully!');
+});
+</script>
 {% endblock %}

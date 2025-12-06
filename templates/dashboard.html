@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+  <!-- Dashboard Content -->
+  <div class="p-8 max-w-6xl mx-auto animate-fadeIn min-h-[80vh] flex flex-col justify-center">
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold text-slate-800 mb-4">Welcome to Your Health Hub</h2>
+      <p class="text-xl text-slate-600">Choose how you would like to proceed with your assessment.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full">
+      
+      <!-- Card 1: Start Assessment -->
+      <a href="{{ url_for('lifestyle_form') }}" 
+         class="group bg-white p-8 rounded-2xl shadow-xl border-2 border-transparent hover:border-rose-500 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl block">
+        <div class="bg-rose-100 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:bg-rose-500 transition-all duration-300 mx-auto">
+          <span class="text-rose-600 group-hover:text-white text-2xl transition-all duration-300">🩺</span>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800 mb-3 text-center group-hover:text-rose-600 transition-colors">Start Assessment</h3>
+        <p class="text-slate-600 mb-6 text-center leading-relaxed">
+          Take our two-stage prediction test starting with lifestyle factors. Our AI model will assess your risk level.
+        </p>
+        <div class="text-rose-600 font-semibold flex items-center justify-center gap-2 text-lg group-hover:text-rose-500 transition-colors">
+          Begin Prediction 
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Card 2: Health Insights -->
+      <a href="{{ url_for('visuals') }}" 
+         class="group bg-white p-8 rounded-2xl shadow-xl border-2 border-transparent hover:border-blue-500 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl block">
+        <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-6 group-hover:bg-blue-500 transition-all duration-300 mx-auto">
+          <span class="text-blue-600 group-hover:text-white text-2xl transition-all duration-300">📊</span>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800 mb-3 text-center group-hover:text-blue-600 transition-colors">Health Insights</h3>
+        <p class="text-slate-600 mb-6 text-center leading-relaxed">
+          Explore interactive visualizations and data patterns derived from thousands of patient records.
+        </p>
+        <div class="text-blue-600 font-semibold flex items-center justify-center gap-2 text-lg group-hover:text-blue-500 transition-colors">
+          View Analytics 
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Bottom CTA -->
+    <div class="mt-16 text-center">
+      <p class="text-lg text-slate-600 mb-6 max-w-2xl mx-auto">
+        Powered by dual-stage AI models combining lifestyle analysis with clinical precision for accurate cardiovascular risk assessment.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <a href="{{ url_for('lifestyle_form') }}" 
+           class="bg-rose-600 hover:bg-rose-700 text-white px-8 py-3 rounded-full text-lg font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105 shadow-lg">
+          Start Your Assessment Now 🩺
+        </a>
+        <a href="{{ url_for('visuals') }}" 
+           class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full text-lg font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105 shadow-lg">
+          Explore Data Insights 📊
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
+
+{% endblock %}

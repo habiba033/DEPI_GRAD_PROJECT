@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify 
 from DS1.cardio_predict import full_lifestyle_eval
 from DS1.cardio_predict import predict_lifestyle
 from DS2.clinical_predict import predict_clinical
 from DS2.clinical_predict import full_clinical_eval
+from DS2.clinical_visuals import get_clinical_visual_stats
+from DS1.Cardio_visuals import get_visual_stats
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -14,8 +17,17 @@ AGE_CATS = ["18-24","25-29","30-34","35-39","40-44",
 def integrated_decision(life_dict, clin_dict=None):
     pred_life, p_life = predict_lifestyle(life_dict)
 
-    age_cat = life_dict["Age_Category"]
-    is_over_40 = AGE_CATS.index(age_cat) >= 4
+    age_cat = life_dict.get("Age_Category")
+    is_over_40 = False
+    if age_cat in AGE_CATS:
+        is_over_40 = AGE_CATS.index(age_cat) >= 4
+    else:
+    # fallback: if age provided as number, consider it
+        try:
+            age_val = int(life_dict.get("Age", 0))
+            is_over_40 = age_val >= 40
+        except Exception:
+            is_over_40 = False
 
     # حالة lifestyle فقط بدون clinical
     if clin_dict is None:
@@ -165,9 +177,36 @@ def clinical_form():
                            form_data=form,
                            default_age=default_age)
 
-@app.route("/visuals/lifestyle")
-def visuals_lifestyle():
-    return render_template("visuals_lifestyle.html")
+@app.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
+
+@app.route('/api/visuals-data')
+def api_visuals_data():
+    return jsonify(get_visual_stats())
+
+
+CLINICAL_DATA_PATH = r"C:\Users\habib\OneDrive\المستندات\Graduation Project\GRAD-proj-DEPI\DS2\heart_cleveland_upload.csv"
+@app.route("/api/clinical-visuals-data")
+def api_clinical_visuals_data():
+    df = pd.read_csv(CLINICAL_DATA_PATH)
+    stats = get_clinical_visual_stats(df)
+    return jsonify(stats)
+
+@app.route("/visuals")
+def visuals():
+    return render_template("visuals_hub.html")
+
+
+@app.route("/visuals/cardio")
+def visuals_cardio():
+    return render_template("visuals.html")  
+
+@app.route("/visuals/clinical")
+def visuals_clinical():
+    return render_template("visuals.html")  
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

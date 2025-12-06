@@ -9,19 +9,17 @@
 
   <div class="transition-all duration-1000 transform translate-y-0 opacity-100 text-center relative z-10">
     <div class="mx-auto mb-6 h-20 w-20 rounded-full bg-rose-500 flex items-center justify-center animate-bounce">
-      <!-- أيقونة قلب بسيطة -->
-      <span class="text-3xl font-bold">♥</span>
+            <span class="text-3xl font-bold">♥</span>
     </div>
     <h1 class="text-5xl font-bold mb-4">MediPredict AI</h1>
     <p class="text-xl text-slate-300 max-w-2xl mx-auto">
       Advanced Two-Stage Heart Disease Prediction System combining Lifestyle Analysis with Clinical Precision.
     </p>
 
-    <a href="{{ url_for('visuals_lifestyle') }}"
-       class="mt-10 inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all hover:scale-105">
-      Explore System
-      <span>→</span>
-    </a>
+    <a href="{{ url_for('dashboard') }}"
+   class="mt-6 bg-rose-600 hover:bg-rose-700 text-white px-8 py-3 rounded-full text-lg font-semibold inline-flex items-center gap-2">
+  Explore System
+</a>
   </div>
 </div>
 {% endblock %}

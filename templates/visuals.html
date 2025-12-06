@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="min-h-screen bg-slate-50 flex items-stretch justify-center py-6">
+    <div id="root" class="w-full max-w-6xl"></div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for(
+    'static',
+    filename='reactVisuals/react-dashboard/build/static/js/main.08ffb1d3.js'
+  ) }}"></script>
+{% endblock %}
