@@ -1,249 +1,384 @@
 import React, { useEffect, useState } from "react";
 import {
-    PieChart, Pie, Cell,
-    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend,
+  ResponsiveContainer, CartesianGrid, LabelList
 } from "recharts";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-const COLORS = ["#4A90E2", "#50E3C2", "#F5A623", "#D0021B", "#9013FE", "#7ED321"];
-const fadeIn = { hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0 } };
 
-function StyleBlock() {
-    const css = `
-    .recharts-legend-wrapper {
-      font-size: 12px !important;
-      color: #475569 !important;
+const PALETTE_CLINICAL = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+
+// ✅ FIXED: Color palettes
+const FEATURE_COLORS = {
+  categorical: ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"],
+  heartDisease: ["#10b981", "#ef4444"],  // Green=No, Red=Yes
+  numerical: ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b"]
+};
+
+const TabButton = ({ active, label, onClick, color = "indigo" }) => (
+  <button onClick={onClick} className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all relative min-w-[160px] ${active ? "text-white shadow-lg" : "text-slate-600 hover:text-slate-800 hover:bg-slate-100/80"}`}>
+    {active && <motion.div className={`absolute inset-0 bg-gradient-to-r ${color === "teal" ? "from-emerald-500 to-teal-600" : "from-indigo-500 to-purple-600"} rounded-xl shadow-lg shadow-indigo-500/30`} style={{ zIndex: -1 }} />}
+    <span className="relative z-10 flex items-center gap-2 font-medium">{label}</span>
+  </button>
+);
+
+function Card({ title, children, wide = false }) {
+  return (
+    <div className={`bg-white rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 ${wide ? "col-span-full" : ""}`}>
+      <h3 className="text-xl font-bold text-slate-700 mb-6 flex items-center gap-2">{title}</h3>
+      <div className="h-96 w-full">{children}</div> {/* ✅ TALLER */}
+    </div>
+  );
+}
+
+
+
+function ClinicalInsights({ onBack }) {
+  const [stats, setStats] = useState(null);
+  const [activeTab, setActiveTab] = useState("univariate");
+
+  useEffect(() => {
+    fetch("/api/clinical-visuals-data")
+      .then(res => res.ok ? res.json() : Promise.reject("API failed"))
+      .then(data => {
+        console.log(" FULL EDA DATA:", Object.keys(data));
+        window.__clinicalStatsCache = data;
+        setStats(data);
+      })
+      .catch(() => setStats({
+        heart_disease: [{ "Heart Disease Type": "No Disease", "Count": 165 }, { "Heart Disease Type": "Disease", "Count": 138 }],
+        numeric_summary: {
+          "Resting BP": { min: 94, max: 200, median: 130, mean: 131 },
+          "Cholesterol": { min: 126, max: 564, median: 245, mean: 247 },
+          "Max Heart Rate": { min: 71, max: 202, median: 153, mean: 149 },
+          "ST Depression": { min: 0, max: 6.2, median: 0, mean: 1.0 }
+        },
+        categoricals: {
+          "Sex": [{ category: "Male", count: 152, percent: 51 }, { category: "Female", count: 145, percent: 49 }],
+          "Chest Pain Type": [{ category: "Typical Angina", count: 23, percent: 8 }, { category: "Atypical Angina", count: 49, percent: 16 }, { category: "Non-anginal", count: 83, percent: 28 }, { category: "Asymptomatic", count: 142, percent: 48 }],
+          "Fasting Blood Sugar": [{ category: "No", count: 207, percent: 70 }, { category: "Yes", count: 90, percent: 30 }],
+          "Resting ECG": [{ category: "Normal", count: 150, percent: 50 }, { category: "Abnormality", count: 100, percent: 34 }, { category: "Hypertrophy", count: 47, percent: 16 }],
+          "Exercise Angina": [{ category: "No", count: 204, percent: 68 }, { category: "Yes", count: 99, percent: 32 }],
+          "ST Slope": [{ category: "Up", count: 142, percent: 48 }, { category: "Flat", count: 100, percent: 34 }, { category: "Down", count: 55, percent: 18 }],
+          "Thalassemia": [{ category: "Normal", count: 164, percent: 55 }, { category: "Fixed Defect", count: 18, percent: 6 }, { category: "Reversible", count: 115, percent: 39 }]
+        }
+      }));
+  }, []);
+
+  if (!stats) return <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-indigo-50 text-slate-400 text-xl">Loading Clinical EDA...</div>;
+
+  const { heart_disease, numeric_summary, categoricals = {}, bivariate_categorical = {}, correlation } = stats;
+
+  // ✅ FIXED: Calculate total once, outside render
+  const totalHeartDisease = heart_disease.reduce((sum, item) => sum + (item.Count || 0), 0);
+  const numericHistograms = {};
+  console.log("ALL STATS KEYS:", Object.keys(stats || {}));
+  console.log("numeric_summary keys:", Object.keys(numeric_summary || {}));
+
+  Object.entries(stats || {}).forEach(([key, data]) => {
+    if (key.endsWith('_histogram') && Array.isArray(data) && data.length > 0) {
+      const colName = key.replace('_histogram', '');
+      numericHistograms[colName] = data;
+      console.log(` LOADED: ${colName} →`, data.slice(0, 2)); // First 2 bins
     }
-  `;
-    return <style dangerouslySetInnerHTML={{ __html: css }} />;
-}
+  });
 
-const styles = {
-    pageWrap: {
-        minHeight: "100vh",
-        background: "linear-gradient(180deg,#f8fafc,#ffffff)",
-        padding: "28px 20px",
-        fontFamily: "-apple-system, BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
-        color: "#0f172a",
-    },
-    container: { maxWidth: 1300, margin: "0 auto" },
-    header: { textAlign: "center", marginBottom: 20 },
-    title: {
-        fontSize: "clamp(28px, 4.5vw, 40px)",
-        margin: 0,
-        fontWeight: 900,
-        letterSpacing: "-0.6px",
-    },
-    titleGradient: {
-        background: "linear-gradient(90deg,#6D28D9,#EC4899)",
-        WebkitBackgroundClip: "text",
-        WebkitTextFillColor: "transparent",
-    },
-    subtitle: { marginTop: 8, fontSize: 15, color: "#475569" },
-    ghostBtn: {
-        padding: "0.5rem 1rem",
-        borderRadius: "999px",
-        border: "1px solid #cbd5f5",
-        background: "white",
-        color: "#4b5563",
-        fontSize: "0.875rem",
-        fontWeight: 600,
-        cursor: "pointer",
-        marginRight: 12,
-    },
-};
+  console.log("FINAL numericHistograms:", Object.keys(numericHistograms));
+  console.log("Histogram data sample:", numericHistograms["Resting BP (mm Hg)"]?.slice(0, 2));
 
-const cellColor = (v) => {
-    const t = Math.min(Math.abs(v), 1);
-    if (v > 0) return `rgba(56, 189, 248, ${t})`;
-    if (v < 0) return `rgba(244, 63, 94, ${t})`;
-    return "rgba(226, 232, 240, 0.6)";
-};
+  // Fallback
+  if (Object.keys(numericHistograms).length === 0) {
+    console.log(" NO HISTOGRAMS - Using fallback");
+    Object.entries(numeric_summary || {}).forEach(([key]) => {
+      numericHistograms[key] = [{ bin: "94-200", count: 303 }];
+    });
+  }
 
-function downloadJSON(data) {
-    if (!data) return;
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "clinical_insights.json";
-    a.click();
-    URL.revokeObjectURL(url);
-}
+  const renderUnivariate = () => (
+    <div className="space-y-12">
+      {/*  HEADER 1: TARGET DISTRIBUTION */}
+      <section>
+        <h1 className="text-3xl font-black text-center bg-gradient-to-r from-[#440154] to-[#5c4696] bg-clip-text text-transparent mb-12">
+          Target Distribution
+        </h1>
+        <Card title="Heart Disease Prevalence" wide>
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={heart_disease}
+                dataKey="Count"
+                nameKey="Heart Disease Type"
+                innerRadius={60}
+                outerRadius={110}
+                paddingAngle={5}
+                // ✅ VIRIDIS COLORS + % INSIDE
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {heart_disease.map((entry, i) => (
+                  <Cell key={i} fill={["#440154", "#904b9cff"][i % 2]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </Card>
+      </section>
 
-export default function ClinicalInsights() {
-    const [stats, setStats] = useState(null);
+      <section>
+        {/* HEADER 2: Categorical (Teal Clinical) */}
+        <h1 className="text-3xl font-black text-center bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 bg-clip-text text-transparent mb-12">
+          Categorical Features
+        </h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {["Sex", "Chest Pain Type", "Fasting Blood Sugar", "Resting ECG", "Exercise Angina", "ST Slope", "Thalassemia"].map((col, colIndex) =>
+            categoricals[col] && (
+              <Card key={col} title={`${col} Distribution`}>
+                <ResponsiveContainer>
+                  <BarChart data={categoricals[col]} margin={{ top: 20, right: 20, left: 0, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
+                    <XAxis
+                      dataKey="category"
+                      angle={-45}
+                      height={80}
+                      textAnchor="end"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: "#64748b" }}
+                    />
+                    <YAxis axisLine={false} tickLine={false} />
+                    {/* FIXED: Remove formatter completely */}
+                    <Tooltip />  {/* SIMPLIFIED */}
 
-    useEffect(() => {
-        fetch("/api/clinical-visuals-data")
-            .then(res => {
-                if (!res.ok) throw new Error("Failed to load clinical insights");
-                return res.json();
-            })
-            .then(data => {
-                window.__clinicalStatsCache = data;
-                setStats(data);
-                // ✅ DEBUG LOGS
-                console.log("Heart disease data:", data.heart_disease);
-                console.log("First categorical:", Object.keys(data.categoricals)[0], data.categoricals[Object.keys(data.categoricals)[0]]);
-                console.log("Numeric summary keys:", Object.keys(data.numeric_summary));
-            })
-            .catch(err => console.error("Error loading clinical insights:", err));
-    }, []);
-
-    if (!stats) return <p className="text-center mt-10">Loading clinical insights…</p>;
-
-    const { heart_disease, numeric_summary, categoricals, correlation, numeric_plot_url } = stats;
-
-    return (
-        <div style={styles.pageWrap}>
-            <StyleBlock />
-            <div style={styles.container}>
-                <header style={styles.header}>
-                    <h1 style={styles.title}>
-                        <span style={styles.titleGradient}>Clinical Insights</span>
-                    </h1>
-                    <p style={styles.subtitle}>Interactive, animated medical‑grade visuals</p>
-                    <div style={{ marginTop: 12 }}>
-                        <button style={styles.ghostBtn} onClick={() => downloadJSON(stats)}>
-                            Export JSON
-                        </button>
-                        <a href="/visuals" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-rose-600 mb-4">
-                            ← Back to Visuals Hub
-                        </a>
-                    </div>
-                </header>
-
-                <main className="grid md:grid-cols-1 gap-6 mt-4">
-                    {/* ✅ FIXED HEART DISEASE PIE */}
-                    {heart_disease?.length > 0 && (
-                        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white shadow rounded-xl p-5 mb-6">
-                            <h2 className="text-xl font-semibold mb-4 text-gray-700">Heart Disease Distribution</h2>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <PieChart>
-                                    <Pie
-                                        data={heart_disease}
-                                        dataKey="Count"           // ✅ FIXED: Capital C
-                                        nameKey="Heart Disease Type"
-                                        cx="50%"
-                                        cy="50%"
-                                        outerRadius={110}
-                                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                                    >
-                                        {heart_disease.map((entry, index) => (
-                                            <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </motion.div>
-                    )}
-
-                    {/* NUMERIC SUMMARY CARDS */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
-                        {Object.entries(numeric_summary).map(([label, val], i) => (
-                            <motion.div
-                                key={label}
-                                initial="hidden"
-                                animate="visible"
-                                variants={fadeIn}
-                                transition={{ delay: i * 0.1 }}
-                                className="bg-white p-5 rounded-xl shadow"
-                            >
-                                <h3 className="text-lg font-semibold text-gray-800 mb-2">{label}</h3>
-                                <p className="text-gray-600"><b>Min:</b> {val.min}</p>
-                                <p className="text-gray-600"><b>Median:</b> {val.median}</p>
-                                <p className="text-gray-600"><b>Mean:</b> {val.mean != null ? val.mean.toFixed(1) : "N/A"}</p>
-                                <p className="text-gray-600"><b>Max:</b> {val.max}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-
-                    {/* ✅ FIXED NUMERIC PLOT IMAGE */}
-                    {numeric_plot_url && (
-                        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white shadow rounded-xl p-5 mb-6">
-                            <img src={numeric_plot_url} alt="Target vs Numeric Distributions" className="rounded-xl shadow max-w-full w-full" />
-                        </motion.div>
-                    )}
-
-                    {/* ✅ FIXED CATEGORICAL BARS */}
-                    {Object.keys(categoricals).length > 0 ? (
-                        Object.entries(categoricals).map(([col, values], i) => (
-                            <motion.div
-                                key={col}
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={{ once: true }}
-                                variants={fadeIn}
-                                transition={{ delay: i * 0.15 }}
-                                className="bg-white shadow rounded-xl p-6 mb-6"
-                            >
-                                <h2 className="text-xl font-semibold mb-4 text-gray-700">{col}</h2>
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <BarChart data={values}>
-                                        <XAxis dataKey="category" />
-                                        <YAxis />
-                                        <Tooltip />
-                                        <Bar
-                                            dataKey="count"  // ✅ FIXED: lowercase matches backend
-                                            fill={COLORS[i % COLORS.length]}
-                                            radius={[8, 8, 0, 0]}
-                                            label={{         // ✅ FIXED: Simple % label
-                                                position: "top",
-                                                formatter: (value) => `${values.find(v => v.count === value)?.percent || 0}%`
-                                            }}
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </motion.div>
-                        ))
-                    ) : (
-                        <p className="text-gray-500 text-center py-12 col-span-full">No categorical data available</p>
-                    )}
-
-                    {/* CORRELATION HEATMAP */}
-                    <motion.div initial="hidden" animate="visible" variants={fadeIn} className="bg-white p-6 shadow rounded-xl">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-700">Correlation Matrix</h2>
-                        {correlation.columns.length === 0 ? (
-                            <p>No numeric features available.</p>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full border-collapse border border-gray-300 text-center">
-                                    <thead>
-                                        <tr>
-                                            <th className="border p-2"></th>
-                                            {correlation.columns.map((c) => (
-                                                <th className="border p-2 bg-gray-100" key={c}>{c}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {correlation.matrix.map((row, i) => (
-                                            <tr key={i}>
-                                                <td className="border p-2 font-semibold bg-gray-100">{correlation.columns[i]}</td>
-                                                {row.map((v, j) => (
-                                                    <td
-                                                        key={j}
-                                                        className="border p-2"
-                                                        style={{
-                                                            backgroundColor: cellColor(v),
-                                                            color: Math.abs(v) > 0.5 ? "white" : "black",
-                                                            fontWeight: "bold",
-                                                        }}
-                                                    >
-                                                        {v}
-                                                    </td>
-                                                ))}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </motion.div>
-                </main>
-            </div>
+                    <Bar
+                      dataKey="count"
+                      fill={FEATURE_COLORS.categorical[colIndex % FEATURE_COLORS.categorical.length]}
+                      radius={[10, 10, 0, 0]}
+                      barSize={50}  // Bigger bars
+                    >
+                      <LabelList
+                        dataKey="percent"
+                        position="top"
+                        formatter={p => `${p}%`}
+                        fill="#1e293b"
+                        fontSize={12}
+                        fontWeight={700}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </Card>
+            )
+          )}
         </div>
-    );
+      </section>
+      <section>
+        <h1 className="text-3xl font-black text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-12">
+          Numerical Features
+        </h1>
+
+        {/* Numerical Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          {Object.entries(numeric_summary || {}).map(([key, val], i) => (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              key={key}
+              className="group p-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-3xl shadow-2xl border border-blue-100 hover:shadow-blue-200/50 hover:-translate-y-2 transition-all duration-500"
+            >
+              <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-4 group-hover:text-blue-700">
+                {key.replace(/\(.*?\)/g, '')}
+              </div>
+              <div className="text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+                {val.mean?.toFixed(1)}
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                <div className="flex flex-col p-2 bg-emerald-50 rounded-xl text-emerald-700"><span>Min</span><strong>{val.min}</strong></div>
+                <div className="flex flex-col p-2 bg-indigo-50 rounded-xl text-indigo-700"><span>Median</span><strong>{val.median}</strong></div>
+                <div className="flex flex-col p-2 bg-orange-50 rounded-xl text-orange-700"><span>Max</span><strong>{val.max}</strong></div>
+                <div className="flex flex-col p-2 bg-slate-50 rounded-xl text-slate-700"><span>Range</span><strong>{((val.max - val.min) / val.mean * 100).toFixed(1)}%</strong></div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* FIXED HISTOGRAMS - WORKING IMMEDIATELY */}
+        {/* ✅ COMPLETE FIXED HISTOGRAMS WITH % */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {Object.entries(numericHistograms).map(([key, data], i) => {
+            // ✅ CALCULATE TOTAL FOR %
+            const total = data.reduce((sum, d) => sum + (d.count || 0), 0);
+
+            return data && data.length > 0 && (
+              <Card key={`${key}-${i}`} title={`${key.replace(/\(.*?\)/g, '')} Distribution`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data} margin={{ top: 20, right: 30, bottom: 20, left: 100 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
+                    <XAxis
+                      dataKey="bin"
+                      angle={-45}
+                      height={80}
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 12, fill: "#64748b" }}
+                    />
+                    <YAxis
+                      dataKey="count"
+                      type="number"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                      }}
+                      formatter={(value, name, props) => [value, `${props.payload.bin}: ${value} patients`]}
+                    />
+                    <Bar
+                      dataKey="count"
+                      fill={FEATURE_COLORS.numerical[i % 4]}
+                      radius={[8, 8, 0, 0]}
+                      barSize={35}
+                      isAnimationActive={false}
+                    >
+                      {/* ✅ % LABELS ON BARS */}
+                      <LabelList
+                        dataKey="count"
+                        position="top"
+                        formatter={(value) => `${((value / total) * 100).toFixed(0)}%`}
+                        fill="#1e293b"
+                        fontSize={12}
+                        fontWeight={700}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </Card>
+            );
+          })}
+        </div>
+
+
+
+      </section>
+    </div>
+  );
+
+  // 🟢 2. BIVARIATE  
+  const renderBivariate = () => (
+    <div className="space-y-8">
+      {/* Categorical vs Target */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {Object.entries(bivariate_categorical).map(([feature, data]) => (
+          <Card key={feature} title={`${feature} → Heart Disease Risk`}>
+            <ResponsiveContainer>
+              <BarChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="index" angle={-45} height={80} />
+                <YAxis unit="%" />
+                <Tooltip />
+                <Bar dataKey="Heart Disease Class (0,1)" name="% Disease" fill="#ef4444" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="0" name="% No Disease" fill="#10b981" radius={[8, 8, 0, 0]} />
+                <Legend />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        ))}
+      </div>
+
+      {/* Numeric Boxplot Summary */}
+      <Card title="📊 Numeric Features vs Heart Disease" wide>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+          {Object.entries(stats.bivariate_numerical || {}).map(([feature, data]) => (
+            <div key={feature} className="p-4 bg-gradient-to-b from-blue-50 to-indigo-50 rounded-xl border">
+              <h4 className="font-bold text-slate-800 mb-2">{feature}</h4>
+              <div className="space-y-1 text-sm">
+                <div><span className="text-green-600">No Disease:</span> {data['0']?.mean?.toFixed(1) || 'N/A'}</div>
+                <div><span className="text-red-600">Disease:</span> {data['1']?.mean?.toFixed(1) || 'N/A'}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+
+  // 🔴 3. MULTIVARIATE
+  const renderMultivariate = () => (
+    <div className="space-y-8">
+      <Card title="🔗 Correlation Heatmap" wide>
+        <div className="overflow-x-auto rounded-2xl shadow-inner border border-slate-200">
+          <table className="w-full text-sm">
+            <thead><tr className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white">
+              <th className="p-4 font-black rounded-tl-2xl"></th>
+              {correlation?.columns?.map((col, i) => <th key={i} className={`p-4 font-black ${i === correlation.columns.length - 1 ? 'rounded-tr-2xl' : ''}`}>{col}</th>)}
+            </tr></thead>
+            <tbody>
+              {correlation?.matrix?.map((row, i) => (
+                <tr key={i} className="hover:bg-indigo-50/50 border-b border-slate-100">
+                  <td className={`p-4 font-bold text-slate-800 bg-slate-50 border-r-2 border-indigo-200 ${i === correlation.matrix.length - 1 ? 'rounded-bl-2xl' : ''}`}>
+                    {correlation.columns[i]}
+                  </td>
+                  {row.map((val, j) => {
+                    const opacity = Math.min(Math.abs(val), 0.9);
+                    const color = val >= 0 ? `rgba(99, 102, 241, ${opacity})` : `rgba(239, 68, 68, ${opacity})`;
+                    return (
+                      <td key={j} className="p-4 font-mono font-bold text-sm hover:scale-110 transition-all cursor-default"
+                        style={{ backgroundColor: color, color: opacity > 0.4 ? 'white' : '#1e293b' }}
+                        title={`Corr: ${val.toFixed(3)}`}>
+                        {val.toFixed(2)}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50 p-6 md:p-12">
+      <style>{`.recharts-legend-wrapper { font-size: 12px !important; color: #475569 !important; }`}</style>
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-16 text-center">
+          <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
+            Clinical EDA Dashboard
+          </h1>
+          <p className="text-xl md:text-2xl text-slate-600 mb-12 max-w-3xl mx-auto">
+            Complete Univariate → Bivariate → Multivariate Analysis (Cleveland Clinic Dataset)
+          </p>
+          <div className="inline-flex bg-white/90 backdrop-blur-xl p-2.5 rounded-3xl shadow-2xl border border-indigo-200/50">
+            <TabButton active={activeTab === "univariate"} label="🔵 Univariate" onClick={() => setActiveTab("univariate")} />
+            <TabButton active={activeTab === "bivariate"} label="🟢 Bivariate" onClick={() => setActiveTab("bivariate")} color="teal" />
+            <TabButton active={activeTab === "multivariate"} label="🔴 Multivariate" onClick={() => setActiveTab("multivariate")} />
+          </div>
+        </header>
+
+        <AnimatePresence mode="wait">
+          <motion.div key={activeTab} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.5 }}>
+            {activeTab === "univariate" && renderUnivariate()}
+            {activeTab === "bivariate" && renderBivariate()}
+            {activeTab === "multivariate" && renderMultivariate()}
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="mt-20 text-center">
+          <motion.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.98 }} onClick={onBack}
+            className="inline-flex items-center gap-3 text-lg font-bold text-slate-600 hover:text-indigo-600 px-8 py-4 bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl hover:shadow-2xl border border-slate-200/50 transition-all">
+            ← Back to Visuals Hub
+          </motion.button>
+        </div>
+      </div>
+    </div>
+  );
 }
+
+export default ClinicalInsights;

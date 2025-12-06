@@ -3,7 +3,7 @@ from DS1.cardio_predict import full_lifestyle_eval
 from DS1.cardio_predict import predict_lifestyle
 from DS2.clinical_predict import predict_clinical
 from DS2.clinical_predict import full_clinical_eval
-from DS2.clinical_visuals import get_clinical_visual_stats
+from DS2.clinical_visuals import get_clinical_visual_stats,df
 from DS1.Cardio_visuals import get_visual_stats
 import pandas as pd
 
@@ -29,7 +29,6 @@ def integrated_decision(life_dict, clin_dict=None):
         except Exception:
             is_over_40 = False
 
-    # حالة lifestyle فقط بدون clinical
     if clin_dict is None:
         if pred_life == 0 and not is_over_40:
             return {
@@ -47,7 +46,6 @@ def integrated_decision(life_dict, clin_dict=None):
                 "interpretation": "Risky lifestyle but young age.",
                 "recommendation": "Improve exercise, diet, and smoking/alcohol habits; no urgent clinical alarm yet."
             }
-        # أي حالة تتطلب clinical:
         return {
             "stage": "need_clinical",
             "life_pred": pred_life,
@@ -55,7 +53,6 @@ def integrated_decision(life_dict, clin_dict=None):
             "message": "Lifestyle profile and/or age suggest that a clinical assessment is recommended."
         }
 
-    # هنا عندنا بيانات clinical كمان
     pred_clin, p_clin = predict_clinical(clin_dict)
 
     if pred_life == 0 and pred_clin == 0:
@@ -102,12 +99,10 @@ def lifestyle_form():
         age_idx = AGE_CATS.index(age_cat)
         is_over_40 = age_idx >= 4
 
-        # threshold مناسب (اختَرته أنت حسب الموديل)
         high_risk = proba >= 0.02
         print("DEBUG lifestyle pred, proba, high_risk:",
               pred, proba, high_risk, "age_cat:", age_cat)
 
-        # 1) فقط لو high_risk + عمر ≥ 40 → تحويل مباشر إلى Stage 2
         if high_risk and is_over_40:
             return redirect(url_for(
                 "clinical_form",
@@ -116,7 +111,6 @@ def lifestyle_form():
                 life_proba=proba,
             ))
 
-        # 2) باقي الحالات → نعرض بطاقة Stage 1 + زر اختيارى للـ Stage 2
         if high_risk:
             level = "Moderate"
             msg = "Your lifestyle profile shows several risk factors. Lifestyle modification is strongly recommended."
@@ -146,11 +140,9 @@ def clinical_form():
     decision = None
     form = None
 
-    # نأخذ age من الـ query string إن وُجد
     age_cat = request.args.get("age_cat", default=None, type=str)
     default_age = None
     if age_cat:
-        # مثال بسيط لتحويل فئة عمرية لسن تقريبي
         if "-" in age_cat:
             lo, hi = age_cat.split("-")
             default_age = int((int(lo) + int(hi)) / 2)
@@ -185,13 +177,11 @@ def dashboard():
 def api_visuals_data():
     return jsonify(get_visual_stats())
 
-
-CLINICAL_DATA_PATH = r"C:\Users\habib\OneDrive\المستندات\Graduation Project\GRAD-proj-DEPI\DS2\heart_cleveland_upload.csv"
+    
 @app.route("/api/clinical-visuals-data")
-def api_clinical_visuals_data():
-    df = pd.read_csv(CLINICAL_DATA_PATH)
-    stats = get_clinical_visual_stats(df)
-    return jsonify(stats)
+def clinical_visuals_data():
+    return jsonify(get_clinical_visual_stats(df))
+
 
 @app.route("/visuals")
 def visuals():
@@ -205,6 +195,10 @@ def visuals_cardio():
 @app.route("/visuals/clinical")
 def visuals_clinical():
     return render_template("visuals.html")  
+
+@app.route('/favicon.ico')
+def favicon():
+    return app.send_static_file('favicon.ico')
 
 
 
