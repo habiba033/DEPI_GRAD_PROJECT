@@ -3,7 +3,7 @@ from DS1.cardio_predict import full_lifestyle_eval
 from DS1.cardio_predict import predict_lifestyle
 from DS2.clinical_predict import predict_clinical
 from DS2.clinical_predict import full_clinical_eval
-from DS2.clinical_visuals import get_clinical_visual_stats,df
+from DS2.clinical_visuals import get_clinical_visual_stats,df_viz
 from DS1.Cardio_visuals import get_visual_stats
 import pandas as pd
 
@@ -180,7 +180,7 @@ def api_visuals_data():
     
 @app.route("/api/clinical-visuals-data")
 def clinical_visuals_data():
-    return jsonify(get_clinical_visual_stats(df))
+    return jsonify(get_clinical_visual_stats(df_viz))
 
 
 @app.route("/visuals")
