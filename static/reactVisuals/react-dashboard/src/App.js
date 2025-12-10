@@ -12,7 +12,7 @@ function App() {
     return <ClinicalInsights />;
   }
 
-  // optional: simple menu if someone opens /visuals directly
+  // optional menu if they just open /visuals
   return (
     <div style={{ minHeight: "100vh", display: "flex",
                   flexDirection: "column", alignItems: "center",
@@ -27,3 +27,4 @@ function App() {
 }
 
 export default App;
+

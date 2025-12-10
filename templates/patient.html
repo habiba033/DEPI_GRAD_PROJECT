@@ -1,0 +1,25 @@
+<!-- templates/patient.html -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Patient Portal - MediPredict</title>
+
+    <!-- React + Babel (dev setup) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind + icons + Leaflet (for map) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  </head>
+  <body class="bg-slate-50">
+    <div id="patient-root"></div>
+
+    <!--   static/patient/patient.jsx -->
+    <script type="text/babel" src="{{ url_for('static', filename='patient/PatientApp.jsx') }}"></script>
+  </body>
+</html>
